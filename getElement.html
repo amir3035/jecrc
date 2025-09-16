@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>getElementsByClassName Example</title>
+</head>
+<body>
+
+<p class="intro">Hello DigitalE1!</p>
+<p class="content">DigitalE1 says that HTML DOM is very useful.</p>
+<p class="intro">The first paragraph (index 0) with class="intro": DigitalE1 says that HTML DOM is very useful.</p>
+
+<script>
+
+const introElements = document.getElementsByClassName("intro");
+
+// if (introElements.length > 0) {
+//   console.log("Content of the first 'intro' element:", introElements[0].textContent);
+//   introElements[0].style.color = "blue"; 
+// }
+
+for (let i = 0; i < introElements.length; i++) {
+  introElements[i].style.fontWeight = "bold";
+  introElements[1].style.color='red';
+}
+</script>
+
+</body>
+</html>

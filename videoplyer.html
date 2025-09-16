@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>HTML5 Video Player — YouTube-style Replica</title>
+  <style>
+    :root{
+      --bg:#0f0f12; --panel:#121316; --muted:#9aa0a6; --accent:#ff0000;
+      --glass: rgba(255,255,255,0.03);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial;background:linear-gradient(180deg,#0b0b0d 0%, #0f0f12 100%);color:#e6e6e6}
+
+    .app{display:flex;gap:20px;max-width:1200px;margin:28px auto;padding:20px}
+
+    /* Video area */
+    .player{
+      flex:1;background:var(--panel);border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.6)
+    }
+    .video-wrap{position:relative;background:#000;height:64vh;min-height:300px}
+    video{width:100%;height:100%;background:#000;display:block}
+
+    /* Controls */
+    .controls{
+      position:absolute;left:0;right:0;bottom:0;padding:12px;background:linear-gradient(180deg,transparent,rgba(0,0,0,0.6));display:flex;flex-direction:column;gap:8px
+    }
+    .row{display:flex;align-items:center;gap:8px}
+    .left,.center,.right{display:flex;align-items:center;gap:8px}
+    .center{flex:1;justify-content:center}
+
+    button.btn{background:var(--glass);border:0;padding:8px;border-radius:6px;color:var(--muted);cursor:pointer}
+    button.btn:hover{color:#fff}
+    .big{padding:12px;border-radius:10px}
+
+    .progress{width:100%;-webkit-appearance:none;height:8px;background:rgba(255,255,255,0.12);border-radius:6px}
+    .progress::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(255,0,0,0.12)}
+
+    .time{font-size:13px;color:var(--muted);min-width:70px;text-align:right}
+    .volume{width:100px}
+    .speed{background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.04);padding:6px;border-radius:6px}
+
+    /* Sidebar playlist */
+    .sidebar{width:320px}
+    .playlist{background:var(--panel);border-radius:12px;padding:12px;height:64vh;overflow:auto}
+    .item{display:flex;gap:10px;padding:8px;border-radius:8px;align-items:center;cursor:pointer}
+    .item:hover{background:rgba(255,255,255,0.02)}
+    .thumb{width:120px;height:68px;background:#222;border-radius:6px;flex-shrink:0;object-fit:cover}
+    .meta{flex:1}
+    .title{font-size:14px;margin:0 0 4px}
+    .sub{font-size:12px;color:var(--muted)}
+
+    /* small helpers */
+    .flex{display:flex;align-items:center}
+    .center-text{text-align:center}
+
+    /* responsive */
+    @media (max-width:900px){.app{flex-direction:column;padding:12px}.sidebar{width:100%}.playlist{height:220px}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="player">
+      <div class="video-wrap" id="videoWrap">
+        <video id="video" preload="metadata" crossorigin="anonymous">
+          <source src="http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4">
+          
+        </video>
+
+        <div class="controls" id="controls">
+          <input type="range" id="progress" class="progress" min="0" max="100" value="0" step="0.01">
+          <div class="row">
+            <div class="left">
+              <button class="btn big" id="playPause">▶️</button>
+              <button class="btn" id="rewind">⏪ 10s</button>
+              <button class="btn" id="forward">10s ⏩</button>
+              <div class="flex" style="margin-left:8px">
+                <button class="btn" id="mute">🔊</button>
+                <input type="range" id="volume" class="volume" min="0" max="1" step="0.01" value="1">
+              </div>
+            </div>
+
+            <div class="center">
+              <div class="time" id="current">0:00</div>
+              <div style="width:8px"></div>
+              <div class="time" id="duration">0:00</div>
+            </div>
+
+            <div class="right">
+              <select id="playbackRate" class="speed" title="Playback speed">
+                <option value="0.5">0.5x</option>
+                <option value="0.75">0.75x</option>
+                <option value="1" selected>1x</option>
+                <option value="1.25">1.25x</option>
+                <option value="1.5">1.5x</option>
+                <option value="2">2x</option>
+              </select>
+              <button class="btn" id="pip">📺</button>
+              <button class="btn" id="fs">⤢</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <div class="playlist" id="playlist"></div>
+    </div>
+  </div>
+
+  <script>
+    // Simple playlist (public sample videos)
+    const playlist = [
+      {title: 'Big Buck Bunny', src: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', thumb: 'https://peach.blender.org/wp-content/uploads/title_anouncement.jpg?x11217'},
+      {title: 'Elephants Dream', src: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', thumb: 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/Elephants_Dream_s1_proog.jpg/320px-Elephants_Dream_s1_proog.jpg'},
+      {title: 'For Bigger Blazes', src: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', thumb: 'https://storage.googleapis.com/gtv-videos-bucket/sample/images/ForBiggerBlazes.jpg'}
+    ];
+
+    const video = document.getElementById('video');
+    const playPause = document.getElementById('playPause');
+    const progress = document.getElementById('progress');
+    const current = document.getElementById('current');
+    const duration = document.getElementById('duration');
+    const volume = document.getElementById('volume');
+    const mute = document.getElementById('mute');
+    const playbackRate = document.getElementById('playbackRate');
+    const pip = document.getElementById('pip');
+    const fs = document.getElementById('fs');
+    const playlistEl = document.getElementById('playlist');
+
+    let isSeeking = false;
+
+    // Utility: format seconds to mm:ss
+    function fmt(s){
+      if (!isFinite(s)) return '0:00';
+      const m = Math.floor(s/60); const sec = Math.floor(s%60).toString().padStart(2,'0');
+      return `${m}:${sec}`;
+    }
+
+    // Load playlist UI
+    function renderPlaylist(){
+      playlistEl.innerHTML='';
+      playlist.forEach((p, i)=>{
+        const item = document.createElement('div');
+        item.className='item';
+        item.innerHTML = `
+          <img class='thumb' src='${p.thumb}' alt='thumb'>
+          <div class='meta'>
+            <p class='title'>${p.title}</p>
+            <p class='sub'>Click to play</p>
+          </div>`;
+        item.addEventListener('click', ()=> loadVideo(i));
+        playlistEl.appendChild(item);
+      });
+    }
+
+    let currentIndex = 0;
+    function loadVideo(index){
+      currentIndex = index;
+      video.src = playlist[index].src;
+      video.playbackRate = parseFloat(playbackRate.value);
+      video.play().catch(()=>{});
+      // highlight active (simple)
+      Array.from(playlistEl.children).forEach((c, idx)=> c.style.background = idx===index? 'rgba(255,0,0,0.06)':'' );
+    }
+
+    // Controls
+    playPause.addEventListener('click', ()=>{
+      if (video.paused) video.play(); else video.pause();
+    });
+
+    rewind.addEventListener('click', ()=>{ video.currentTime = Math.max(0, video.currentTime - 10); });
+    forward.addEventListener('click', ()=>{ video.currentTime = Math.min(video.duration || 0, video.currentTime + 10); });
+
+    video.addEventListener('play', ()=> playPause.textContent = '⏸️');
+    video.addEventListener('pause', ()=> playPause.textContent = '▶️');
+
+    video.addEventListener('timeupdate', ()=>{
+      if (!isSeeking){
+        const pct = (video.currentTime / (video.duration || 1)) * 100;
+        progress.value = pct;
+      }
+      current.textContent = fmt(video.currentTime);
+    });
+
+    video.addEventListener('loadedmetadata', ()=>{
+      duration.textContent = fmt(video.duration);
+    });
+
+    // Seek
+    progress.addEventListener('input', ()=>{
+      isSeeking = true;
+      const pct = parseFloat(progress.value);
+      const time = (pct/100) * (video.duration || 0);
+      current.textContent = fmt(time);
+    });
+    progress.addEventListener('change', ()=>{
+      const pct = parseFloat(progress.value);
+      video.currentTime = (pct/100) * (video.duration || 0);
+      isSeeking = false;
+    });
+
+    // Volume
+    volume.addEventListener('input', ()=>{ video.volume = parseFloat(volume.value); updateMuteIcon(); });
+    mute.addEventListener('click', ()=>{ video.muted = !video.muted; updateMuteIcon(); });
+    function updateMuteIcon(){ mute.textContent = video.muted || video.volume===0 ? '🔇' : '🔊'; }
+
+    // Playback rate
+    playbackRate.addEventListener('change', ()=>{ video.playbackRate = parseFloat(playbackRate.value); });
+
+    // Picture-in-Picture (if supported)
+    pip.addEventListener('click', async ()=>{
+      try{
+        if (document.pictureInPictureElement) await document.exitPictureInPicture();
+        else await video.requestPictureInPicture();
+      }catch(e){ alert('PiP not available'); }
+    });
+
+    // Fullscreen
+    fs.addEventListener('click', ()=>{
+      const wrap = document.getElementById('videoWrap');
+      if (!document.fullscreenElement) wrap.requestFullscreen().catch(()=>{});
+      else document.exitFullscreen();
+    });
+
+    // Keyboard shortcuts
+    window.addEventListener('keydown',(e)=>{
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      switch(e.key){
+        case ' ': e.preventDefault(); if(video.paused) video.play(); else video.pause(); break;
+        case 'ArrowRight': video.currentTime = Math.min(video.duration||0, video.currentTime + 5); break;
+        case 'ArrowLeft': video.currentTime = Math.max(0, video.currentTime - 5); break;
+        case 'ArrowUp': video.volume = Math.min(1, video.volume + 0.05); volume.value = video.volume; updateMuteIcon(); break;
+        case 'ArrowDown': video.volume = Math.max(0, video.volume - 0.05); volume.value = video.volume; updateMuteIcon(); break;
+        case 'f': const wrap = document.getElementById('videoWrap'); if (!document.fullscreenElement) wrap.requestFullscreen(); else document.exitFullscreen(); break;
+        case 'm': video.muted = !video.muted; updateMuteIcon(); break;
+      }
+    });
+
+    // Auto-play next video when ended
+    video.addEventListener('ended', ()=>{
+      const next = (currentIndex + 1) % playlist.length;
+      loadVideo(next);
+    });
+
+    // Initialize
+    renderPlaylist();
+    loadVideo(0);
+
+  </script>
+</body>
+</html>

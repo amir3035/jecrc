@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mini Social — UI Prototype</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg: #f3f6fb;
+      --card: #ffffff;
+      --muted: #6b7280;
+      --accent: #0066ff;
+      --radius: 12px;
+      --max-width: 1100px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* *{box-sizing: border-box} */
+    body{margin:0;background:var(--bg);color:#111;line-height:1.4}
+
+    .container{
+      max-width:var(--max-width);
+      margin:32px auto;
+      padding:16px;
+      display:grid;
+      grid-template-columns: 260px 1fr 260px;
+      gap:20px;
+      align-items:start;
+    }
+
+    header.app-header{
+      max-width:var(--max-width);
+      margin:16px auto 0;
+      padding:10px 18px;
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      background-color: #06b6d4;
+    }
+
+    /* .brand{display:flex;gap:12px;align-items:center} */
+    .logo{
+      width:44px;height:44px;
+      /* background:linear-gradient(135deg,#4f46e5,#06b6d4); */
+      /* display:grid;place-items:center; */
+      /* color:white;font-weight:700; */
+    }
+    .search{flex:1;min-width:250px;}
+    .search input{width:50%;padding:8px 12px;border-radius:50px;border:1px solid #ddd;}
+
+    aside.profile-card{
+      background:var(--card);border-radius:var(--radius);padding:16px;
+    }
+    .profile-top{display:flex;gap:12px;align-items:center}
+    .avatar{width:64px;height:64px;border-radius:12px;background:#aaa;display:grid;place-items:center;color:white;font-weight:700;}
+    .name{font-weight:700}
+    .muted{color:var(--muted);font-size:13px}
+    .left-nav{margin-top:14px;display:grid;gap:8px}
+    .left-nav a{padding:8px;text-decoration:none;color:#111;border-radius:8px}
+    .left-nav a:hover{background:#484c5a}
+
+    main.feed{display:flex;flex-direction:column;gap:16px}
+
+    .composer{background:var(--card);border-radius:var(--radius);padding:12px;}
+    .composer textarea{width:100%;border:1px solid #ddd;border-radius:8px;padding:8px;resize:none}
+    .composer button{margin-top:8px;padding:8px 12px;border:0;border-radius:6px;background:var(--accent);color:white;cursor:pointer}
+
+    .post{background:var(--card);border-radius:12px;padding:14px;}
+    .post header{display:flex;gap:12px;align-items:center}
+    .post .meta{display:flex;flex-direction:column}
+    .post .content{margin-top:10px}
+    .post .post-actions{display:flex;gap:12px;margin-top:10px;color:var(--muted)}
+
+    .post-grid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:8px;
+      margin-top:10px;
+    }
+    .grid-item{background:#eef2ff;padding:18px;border-radius:8px;text-align:center}
+
+    aside.trends{background:var(--card);border-radius:var(--radius);padding:14px;}
+    .trend-item{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eee}
+
+    footer.site-footer{max-width:var(--max-width);margin:18px auto;padding:10px 18px;color:var(--muted);font-size:13px;display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;background-color: #06b6d4;}
+
+    /* Responsive adjustments */
+    @media (max-width:900px){
+      .container{grid-template-columns:1fr;}
+      aside.profile-card{order:1}
+      main.feed{order:2}
+      aside.trends{order:3}
+    }
+
+    @media (max-width:500px){
+      header.app-header{flex-direction:column;align-items:flex-start}
+      .search{width:100%;}
+      .post-grid{grid-template-columns:1fr 1fr;}
+    }
+  </style>
+</head>
+<body>
+
+  <header class="app-header">
+    <!-- <div class="brand">
+      <div class="logo">MS</div> -->
+      <div><strong>Mini Social</strong></div>
+    <!-- </div> -->
+    <div class="search"><input type="search" placeholder="Search..." /></div>
+  </header>
+
+  <div class="container">
+    <aside class="profile-card">
+      <div class="profile-top">
+        <div class="avatar">AH</div>
+        <div>
+          <div class="name">Amir Hussain</div>
+          <div class="muted">IT Trainer</div>
+        </div>
+      </div>
+      <nav class="left-nav">
+        <a href="#"> Home</a>
+        <a href="#"> Messages</a>
+        <a href="#"> Settings</a>
+      </nav>
+    </aside>
+
+    <main class="feed">
+      <section class="composer">
+        <textarea rows="3" placeholder="What's happening?"></textarea>
+        <button>Post</button>
+      </section>
+
+      <article class="post">
+        <header>
+          <div class="avatar">JS</div>
+          <div class="meta">
+            <strong>Ram</strong>
+            <small class="muted">2 hrs ago</small>
+          </div>
+        </header>
+        <div class="content">Exploring the new CSS Grid layouts!</div>
+        <div class="post-grid">
+          <div class="grid-item">Image 1</div>
+          <div class="grid-item">Image 2</div>
+          <div class="grid-item">Image 3</div>
+        </div>
+        <div class="post-actions">
+          <div>👍 120</div>
+          <div>comment: 14</div>
+        </div>
+      </article>
+    </main>
+
+    <aside class="trends">
+      <h4>Trending</h4>
+      <div class="trend-item"><div>#CSSGrid</div><div>2.3k</div></div>
+      <div class="trend-item"><div>#InterviewPrep</div><div>1.1k</div></div>
+      <div class="trend-item"><div>#JDBC</div><div>920</div></div>
+    </aside>
+  </div>
+
+  <footer class="site-footer">
+    <div>© 2025 Mini Social</div>
+    <div>Built with HTML5 • Flexbox • CSS Grid • Google Fonts</div>
+  </footer>
+</body>
+</html>
